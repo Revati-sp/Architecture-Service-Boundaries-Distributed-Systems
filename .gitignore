@@ -1,0 +1,16 @@
+# Virtual environment
+.venv/
+venv/
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Editor / OS files
+.vscode/
+.idea/
+.DS_Store
+
+# Local logs
+*.log
