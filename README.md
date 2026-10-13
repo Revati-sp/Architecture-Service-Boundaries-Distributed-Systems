@@ -59,7 +59,7 @@ Each box with a "Process" label is a separate operating-system process that is s
 | Component | Responsibility |
 |---|---|
 | **Client** | Sends order requests (`POST /orders`) to the Order Service and handles its responses, including retrying after a `503`. The client talks only to the Order Service. It never needs to know that an Inventory Service exists. |
-| **Order Service** | Validates order input, asks the Inventory Service whether stock is available, creates and stores orders, returns meaningful HTTP status codes, and records (logs) an `OrderCreated` event as a placeholder for future broker-based publishing. It handles Inventory Service failures (connection errors and timeouts) without crashing. |
+| **Order Service** | Validates order input, asks the Inventory Service whether stock is available, creates and stores orders, lets clients track an order by ID (`GET /orders/<order_id>`), returns meaningful HTTP status codes, and records (logs) an `OrderCreated` event as a placeholder for future broker-based publishing. It handles Inventory Service failures (connection errors and timeouts) without crashing. |
 | **Inventory Service** | Tracks how many units of each item are in stock and answers availability queries. It is the only source of truth for stock levels. |
 | **Notification Service** | *(Architectural component, not implemented.)* Would subscribe to `OrderCreated` events and notify the customer, for example by sending a confirmation email. Because it reacts to an event instead of being called directly, a notification failure would never block or roll back an order. |
 
@@ -204,6 +204,32 @@ HTTP/1.1 201 CREATED
 Content-Type: application/json
 
 {"created_at":"2026-10-13T02:22:17.945122+00:00","item_id":"item-1","order_id":"a4b6dfb6-fba6-4375-938d-7bbe9231f9fe","quantity":2,"status":"created"}
+```
+
+**Track an order by ID (query to the Order Service, `200 OK`)**
+
+Use the `order_id` returned when the order was created. This example is from a separate run, so the ID is different from the one above.
+
+```bash
+curl -s -i http://localhost:5002/orders/60f59061-affd-47fa-b847-b0410619e2b5
+```
+```
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"created_at":"2026-10-13T02:33:12.251505+00:00","item_id":"item-2","order_id":"60f59061-affd-47fa-b847-b0410619e2b5","quantity":1,"status":"created"}
+```
+
+An unknown order ID returns `404`:
+
+```bash
+curl -s -i http://localhost:5002/orders/does-not-exist
+```
+```
+HTTP/1.1 404 NOT FOUND
+Content-Type: application/json
+
+{"error":"Order not found","message":"Order 'does-not-exist' does not exist"}
 ```
 
 **Unavailable item (`409 Conflict`)**
