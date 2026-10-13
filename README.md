@@ -2,7 +2,7 @@
 
 ## Abstract
 
-This project is a small online-store backend split into independent services. The **Order Service** accepts order requests and, before creating an order, asks the **Inventory Service** over HTTP/REST whether the requested item and quantity are available. Each service runs as its own Python process on its own port and owns its own data. A third component, the **Notification Service**, is part of the architecture only: the Order Service emits an `OrderCreated` event (currently written to the log) that a Notification Service could consume later.
+This project is a small online-store backend split into independent services. The **Order Service** accepts order requests and, before creating an order, asks the **Inventory Service** over HTTP/REST whether the requested item and quantity are available. Each service runs as its own Python process on its own port and owns its own data. A third component, the **Notification Service**, is part of the architecture only: the Order Service records (logs) an `OrderCreated` event as a placeholder for future broker-based publishing, which a Notification Service could then consume.
 
 The project demonstrates these distributed-systems concepts:
 
@@ -59,7 +59,7 @@ Each box with a "Process" label is a separate operating-system process that is s
 | Component | Responsibility |
 |---|---|
 | **Client** | Sends order requests (`POST /orders`) to the Order Service and handles its responses, including retrying after a `503`. The client talks only to the Order Service. It never needs to know that an Inventory Service exists. |
-| **Order Service** | Validates order input, asks the Inventory Service whether stock is available, creates and stores orders, returns meaningful HTTP status codes, and publishes the `OrderCreated` event. It handles Inventory Service failures (connection errors and timeouts) without crashing. |
+| **Order Service** | Validates order input, asks the Inventory Service whether stock is available, creates and stores orders, returns meaningful HTTP status codes, and records (logs) an `OrderCreated` event as a placeholder for future broker-based publishing. It handles Inventory Service failures (connection errors and timeouts) without crashing. |
 | **Inventory Service** | Tracks how many units of each item are in stock and answers availability queries. It is the only source of truth for stock levels. |
 | **Notification Service** | *(Architectural component, not implemented.)* Would subscribe to `OrderCreated` events and notify the customer, for example by sending a confirmation email. Because it reacts to an event instead of being called directly, a notification failure would never block or roll back an order. |
 

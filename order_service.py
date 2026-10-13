@@ -79,7 +79,7 @@ def check_inventory(item_id, quantity):
 
 
 def publish_order_created(order):
-    """Emit an "OrderCreated" event.
+    """Record (log) an "OrderCreated" event.
 
     Placeholder for a message broker: a Notification Service could consume this
     event later. For now the event is only logged, so order creation never
